@@ -1,0 +1,1 @@
+# vaxicare-ktu-java
