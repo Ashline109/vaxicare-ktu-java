@@ -16,9 +16,6 @@ A comprehensive, full-stack clinical immunization management platform designed t
 | 3 | *Member 3* | *[Reg No]* | Web UI/UX & Responsive Front-End |
 | 4 | *Member 4* | *[Reg No]* | Database Persistence & Testing |
 
----
-
-# 💉 VaxiCare – Vaccination Management System
 
 > A Java-based Vaccination Management System developed as part of the KTU Object-Oriented Programming (OOP) project.
 
