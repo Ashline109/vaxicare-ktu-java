@@ -1,0 +1,30 @@
+﻿[
+    {
+        "username":  "arya_prakash",
+        "pass":  "pass123",
+        "fullName":  "Arya Prakash",
+        "role":  "PATIENT",
+        "phone":  "9876543210"
+    },
+    {
+        "username":  "admin",
+        "pass":  "admin123",
+        "fullName":  "Dr. Radhakrishnan (Nodal Officer)",
+        "role":  "ADMIN",
+        "phone":  "9876543200"
+    },
+    {
+        "username":  "sneha_patel",
+        "pass":  "pass456",
+        "fullName":  "Sneha Patel",
+        "role":  "PATIENT",
+        "phone":  "9847555666"
+    },
+    {
+        "username":  "rohu",
+        "pass":  "1234",
+        "fullName":  "rohit",
+        "role":  "PATIENT",
+        "phone":  "9856741230"
+    }
+]

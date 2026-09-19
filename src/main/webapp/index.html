@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaxiCare — Smart Vaccination & Clinical Care Portal</title>
+    <!-- OpenStreetMap / Leaflet CSS for City Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+    <!-- 1. TOP BAR: 24/7 EMERGENCY HOTLINE -->
+    <div class="top-bar">
+        <div class="hotline">
+            <span>🚨 24/7 AEFI Post-Vaccine Emergency Hotline:</span>
+            <a href="tel:1075" style="color: #fca5a5; font-weight: 800;">1075 (Toll-Free)</a> / 
+            <a href="tel:+914952371475" style="color: #fca5a5; font-weight: 800;">+91 495 2371475</a>
+        </div>
+        <div style="display:flex; align-items:center; gap: 12px;">
+            <span id="backendStatusBadge" style="background: #065f46; color: #a7f3d0; padding: 2px 10px; border-radius: 9999px; font-size: 0.78rem; font-weight: 700;">Checking Backend...</span>
+            <a href="#emergency">Emergency Guidelines →</a>
+        </div>
+    </div>
+
+    <!-- 2. NAVBAR -->
+    <nav class="navbar">
+        <a href="#" class="brand">💉 Vaxi<span>Care</span></a>
+        <ul class="nav-links">
+            <li><a href="#vaccines">Vaccines</a></li>
+            <li><a href="#centers">Centres</a></li>
+            <li><a href="#city-map-section">City Map</a></li>
+            <li><a href="#instructions">Instructions</a></li>
+            <li><a href="#emergency">Emergency Care</a></li>
+            <li><a href="#my-bookings-section" id="navBookingsLink" style="display: none;">My Appointments</a></li>
+            <li id="authNavButtons">
+                <button class="btn btn-secondary btn-sm" onclick="openAuthModal('login')">Sign In</button>
+                <button class="btn btn-primary btn-sm" onclick="openAuthModal('register')">Register</button>
+            </li>
+            <li id="userProfileNav" style="display: none; align-items: center; gap: 10px;">
+                <span id="userGreeting" style="font-weight: 600; color: var(--dark); font-size: 0.9rem;"></span>
+                <span id="userRoleBadge" class="badge badge-info">PATIENT</span>
+                <button class="btn btn-secondary btn-sm" onclick="handleLogout()">Sign Out</button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 3. HERO SECTION -->
+    <section class="hero" style="background-color: #0d546d; background-image: linear-gradient(to right, rgba(10, 54, 71, 0.78) 0%, rgba(10, 54, 71, 0.45) 28%, transparent 42%), url('images/vaccine-hero-bg.png'); background-repeat: no-repeat; background-position: center center; background-size: cover;">
+        <div>
+            <span style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 9999px; font-size: 0.85rem; font-weight: 600;">
+                Clinical Immunization Management Platform
+            </span>
+            <h1 style="margin-top: 1rem;">Protected Together</h1>
+            <p>
+                Comprehensive vaccination tracking, automated multi-dose scheduling, real-time centre stock monitoring, and instant medical assistance for post-vaccine side effects.
+            </p>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="#centers" class="btn btn-secondary" style="background: white; color: var(--primary);">Find Nearest Centre</a>
+                <a href="#instructions" class="btn btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.4);">Vaccine Guidelines</a>
+            </div>
+        </div>
+
+        <!-- Hero Appointment Consultation Form -->
+        <div class="hero-form">
+            <h3>Book Inoculation Slot</h3>
+            <p>Schedule your vaccine at an authorized government or private centre.</p>
+            <form onsubmit="handleHeroBooking(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="bName" class="form-control" placeholder="Arya Prakash" required>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" id="bContact" class="form-control" placeholder="10-digit phone number" pattern="[0-9]{10}" required>
+                </div>
+                <div class="form-group">
+                    <label>Select Vaccine</label>
+                    <select id="bVaccine" class="form-control" required>
+                        <option value="Covishield">Covishield (Viral Vector - 84 Days Gap)</option>
+                        <option value="Covaxin">Covaxin (Inactivated - 28 Days Gap)</option>
+                        <option value="Corbevax">Corbevax (Protein Subunit - 28 Days Gap)</option>
+                        <option value="Hepatitis B">Hepatitis B (Recombinant - 30 Days Gap)</option>
+                        <option value="MMR">MMR Vaccine (Live Attenuated - 90 Days Gap)</option>
+                        <option value="Influenza Flu Shot">Influenza Flu Shot (Inactivated Split - 365 Days Gap)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Centre</label>
+                    <select id="bCentre" class="form-control" required>
+                        <option value="District General Hospital">District General Hospital, Kozhikode</option>
+                        <option value="Govt. Medical College Immunization Hub">Govt. Medical College Immunization Hub</option>
+                        <option value="Cheruthuruthy Primary Health Centre">Cheruthuruthy Primary Health Centre</option>
+                        <option value="Aster MIMS Vaccination Clinic">Aster MIMS Vaccination Clinic</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">Confirm Appointment Booking</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 4. ACTIVE APPOINTMENTS (Visible when user has bookings) -->
+    <section id="my-bookings-section" class="container" style="display: none;">
+        <div class="section-header">
+            <h2>Your Booked Vaccination Appointments</h2>
+            <p>Active appointments tracked in real-time under your browser session.</p>
+        </div>
+        <div id="bookingsListContainer" class="grid-2">
+            <!-- Dynamically populated via JavaScript -->
+        </div>
+    </section>
+
+    <!-- 5. ALL VACCINES & MEDICAL INFO -->
+    <section id="vaccines" class="container">
+        <div class="section-header">
+            <h2>Authorized Vaccines & Dosage Regimens</h2>
+            <p>Standardized clinical protocols, safety margins, dose intervals, and authorized age criteria.</p>
+        </div>
+        <div class="grid-3">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <span class="badge badge-success">COVID-19</span>
+                    <span style="font-weight:700; color:var(--primary);">2 Doses</span>
+                </div>
+                <h3 style="font-size: 1.3rem;">Covishield</h3>
+                <p style="font-size:0.85rem; color:var(--gray-600); margin-bottom:0.75rem;">Manufacturer: Serum Institute of India (AstraZeneca)</p>
+                <p style="font-size:0.92rem; margin-bottom:1rem;">Recombinant viral vector platform triggering robust spike-protein cellular immunity.</p>
+                <hr style="border:none; border-top:1px solid var(--gray-200); margin-bottom:0.75rem;">
+                <div style="font-size:0.85rem; color:var(--gray-600); line-height:1.7;">
+                    <div>• <strong>Recommended Interval:</strong> 84 – 112 Days</div>
+                    <div>• <strong>Approved Age:</strong> 18 Years & Above</div>
+                    <div>• <strong>Efficacy Rate:</strong> ~81.3% after complete course</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <span class="badge badge-info">COVID-19</span>
+                    <span style="font-weight:700; color:var(--primary);">2 Doses</span>
+                </div>
+                <h3 style="font-size: 1.3rem;">Covaxin</h3>
+                <p style="font-size:0.85rem; color:var(--gray-600); margin-bottom:0.75rem;">Manufacturer: Bharat Biotech / ICMR</p>
+                <p style="font-size:0.92rem; margin-bottom:1rem;">Whole-virion inactivated Vero-cell platform presenting broad antigen epitopes.</p>
+                <hr style="border:none; border-top:1px solid var(--gray-200); margin-bottom:0.75rem;">
+                <div style="font-size:0.85rem; color:var(--gray-600); line-height:1.7;">
+                    <div>• <strong>Recommended Interval:</strong> 28 Days</div>
+                    <div>• <strong>Approved Age:</strong> 12 Years & Above</div>
+                    <div>• <strong>Efficacy Rate:</strong> ~77.8% symptomatic protection</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <span class="badge badge-warning">Pediatric & Adult</span>
+                    <span style="font-weight:700; color:var(--primary);">2 Doses</span>
+                </div>
+                <h3 style="font-size: 1.3rem;">Corbevax</h3>
+                <p style="font-size:0.85rem; color:var(--gray-600); margin-bottom:0.75rem;">Manufacturer: Biological E. Limited</p>
+                <p style="font-size:0.92rem; margin-bottom:1rem;">Recombinant protein sub-unit vaccine suitable for pediatric inoculations and boosters.</p>
+                <hr style="border:none; border-top:1px solid var(--gray-200); margin-bottom:0.75rem;">
+                <div style="font-size:0.85rem; color:var(--gray-600); line-height:1.7;">
+                    <div>• <strong>Recommended Interval:</strong> 28 Days</div>
+                    <div>• <strong>Approved Age:</strong> 5 Years & Above</div>
+                    <div>• <strong>Efficacy Rate:</strong> >80% neutralizing antibodies</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <span class="badge badge-info">Routine Hep</span>
+                    <span style="font-weight:700; color:var(--primary);">3 Doses</span>
+                </div>
+                <h3 style="font-size: 1.3rem;">Hepatitis B Vaccine</h3>
+                <p style="font-size:0.85rem; color:var(--gray-600); margin-bottom:0.75rem;">Manufacturer: GlaxoSmithKline / Panacea</p>
+                <p style="font-size:0.92rem; margin-bottom:1rem;">Recombinant HBsAg vaccine shielding against chronic liver cirrhosis and HBV infection.</p>
+                <hr style="border:none; border-top:1px solid var(--gray-200); margin-bottom:0.75rem;">
+                <div style="font-size:0.85rem; color:var(--gray-600); line-height:1.7;">
+                    <div>• <strong>Schedule:</strong> 0, 1 month, and 6 months</div>
+                    <div>• <strong>Approved Age:</strong> Birth onwards</div>
+                    <div>• <strong>Protection:</strong> 95%+ life-long immunity</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <span class="badge badge-success">Universal</span>
+                    <span style="font-weight:700; color:var(--primary);">2 Doses</span>
+                </div>
+                <h3 style="font-size: 1.3rem;">MMR Vaccine</h3>
+                <p style="font-size:0.85rem; color:var(--gray-600); margin-bottom:0.75rem;">Manufacturer: Serum Institute / Merck</p>
+                <p style="font-size:0.92rem; margin-bottom:1rem;">Trivalent live attenuated vaccine immunization against Measles, Mumps, and Rubella.</p>
+                <hr style="border:none; border-top:1px solid var(--gray-200); margin-bottom:0.75rem;">
+                <div style="font-size:0.85rem; color:var(--gray-600); line-height:1.7;">
+                    <div>• <strong>Schedule:</strong> Dose 1 at 9–12 mo, Dose 2 at 15 mo</div>
+                    <div>• <strong>Approved Age:</strong> Infants, Adolescents, Adults</div>
+                    <div>• <strong>Efficacy:</strong> 97% measles prevention</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <span class="badge badge-warning">Annual</span>
+                    <span style="font-weight:700; color:var(--primary);">1 Dose</span>
+                </div>
+                <h3 style="font-size: 1.3rem;">Influenza (Flu) Shot</h3>
+                <p style="font-size:0.85rem; color:var(--gray-600); margin-bottom:0.75rem;">Manufacturer: Abbott / Sanofi Pasteur</p>
+                <p style="font-size:0.92rem; margin-bottom:1rem;">Quadrivalent seasonal influenza vaccine updated annually for active strains.</p>
+                <hr style="border:none; border-top:1px solid var(--gray-200); margin-bottom:0.75rem;">
+                <div style="font-size:0.85rem; color:var(--gray-600); line-height:1.7;">
+                    <div>• <strong>Schedule:</strong> Annual single dose before monsoon</div>
+                    <div>• <strong>Approved Age:</strong> 6 Months & Above</div>
+                    <div>• <strong>Reduction:</strong> 60% lower hospitalization risk</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. AVAILABLE CENTRES & LIVE STOCK -->
+    <section id="centers" style="background: white; padding: 4rem 5%; border-top: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200);">
+        <div class="container" style="margin: 0 auto;">
+            <div class="section-header">
+                <h2>Designated Vaccination Centres Across the City</h2>
+                <p>Real-time slot availability, operating timings, and address coordinates.</p>
+            </div>
+
+            <div class="grid-2">
+                <!-- Centre 1 -->
+                <div class="card" style="border-left: 5px solid var(--primary);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>District General Hospital</h3>
+                        <span class="badge badge-success">Govt. Certified</span>
+                    </div>
+                    <p style="color:var(--gray-600); font-size:0.92rem; margin:0.4rem 0;">📍 Mananchira, Kozhikode, Kerala - 673001</p>
+                    <p style="font-size:0.88rem;"><strong>Hours:</strong> 09:00 AM – 04:30 PM (Mon – Sat)</p>
+                    <p style="font-size:0.88rem;"><strong>Helpline:</strong> +91 495 2720250</p>
+                    <div style="margin-top:1rem; padding:0.75rem; background:var(--gray-50); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-size:0.85rem; color:var(--gray-600);">Available Vaccines:</span><br>
+                            <strong>Covishield, Covaxin, Hep-B</strong>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="selectCentre('District General Hospital')">Book Here</button>
+                    </div>
+                </div>
+
+                <!-- Centre 2 -->
+                <div class="card" style="border-left: 5px solid var(--accent);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>Govt. Medical College Immunization Hub</h3>
+                        <span class="badge badge-success">24/7 Casualty Support</span>
+                    </div>
+                    <p style="color:var(--gray-600); font-size:0.92rem; margin:0.4rem 0;">📍 Medical College PO, Kozhikode, Kerala - 673008</p>
+                    <p style="font-size:0.88rem;"><strong>Hours:</strong> 08:30 AM – 06:00 PM (Daily)</p>
+                    <p style="font-size:0.88rem;"><strong>Helpline:</strong> +91 495 2355331</p>
+                    <div style="margin-top:1rem; padding:0.75rem; background:var(--gray-50); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-size:0.85rem; color:var(--gray-600);">Available Vaccines:</span><br>
+                            <strong>Covishield, Corbevax, MMR</strong>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="selectCentre('Govt. Medical College Immunization Hub')">Book Here</button>
+                    </div>
+                </div>
+
+                <!-- Centre 3 -->
+                <div class="card" style="border-left: 5px solid var(--warning);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>Cheruthuruthy Primary Health Centre</h3>
+                        <span class="badge badge-info">Community Hub</span>
+                    </div>
+                    <p style="color:var(--gray-600); font-size:0.92rem; margin:0.4rem 0;">📍 Cheruthuruthy, Thrissur, Kerala - 679531</p>
+                    <p style="font-size:0.88rem;"><strong>Hours:</strong> 09:00 AM – 02:00 PM (Mon – Fri)</p>
+                    <p style="font-size:0.88rem;"><strong>Helpline:</strong> +91 4884 262330</p>
+                    <div style="margin-top:1rem; padding:0.75rem; background:var(--gray-50); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-size:0.85rem; color:var(--gray-600);">Available Vaccines:</span><br>
+                            <strong>Covaxin, Hep-B, TT</strong>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="selectCentre('Cheruthuruthy Primary Health Centre')">Book Here</button>
+                    </div>
+                </div>
+
+                <!-- Centre 4 -->
+                <div class="card" style="border-left: 5px solid var(--primary-dark);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>Aster MIMS Vaccination Clinic</h3>
+                        <span class="badge badge-warning">Private Partner</span>
+                    </div>
+                    <p style="color:var(--gray-600); font-size:0.92rem; margin:0.4rem 0;">📍 Mini Bypass Road, Govindapuram, Kozhikode - 673016</p>
+                    <p style="font-size:0.88rem;"><strong>Hours:</strong> 08:00 AM – 08:00 PM (Daily)</p>
+                    <p style="font-size:0.88rem;"><strong>Helpline:</strong> +91 495 2488000</p>
+                    <div style="margin-top:1rem; padding:0.75rem; background:var(--gray-50); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-size:0.85rem; color:var(--gray-600);">Available Vaccines:</span><br>
+                            <strong>All Pediatric & Travel Vaccines</strong>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="selectCentre('Aster MIMS Vaccination Clinic')">Book Here</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. MAP OF THE CITY -->
+    <section id="city-map-section" class="container">
+        <div class="section-header">
+            <h2>City Vaccination Network Map</h2>
+            <p>Interactive geographic layout of primary clinical sites, hospital distribution hubs, and emergency centers.</p>
+        </div>
+        <div class="card" style="padding: 1rem;">
+            <div id="cityMap"></div>
+            <div style="display:flex; justify-content:space-around; margin-top:1rem; font-size:0.88rem; color:var(--gray-600); flex-wrap: wrap; gap: 10px;">
+                <span>🔵 <strong>Blue Pins:</strong> Primary Public Vaccination Centres</span>
+                <span>🔴 <strong>Red Pins:</strong> 24/7 Emergency Medical Response Hospitals</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. INSTRUCTIONS (BEFORE VACCINE & AFTER BOOKING) -->
+    <section id="instructions" style="background: white; padding: 4.5rem 5%; border-top: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200);">
+        <div class="container" style="margin: 0 auto;">
+            <div class="section-header">
+                <h2>Clinical Instructions: Before & After Vaccination</h2>
+                <p>Essential guidance to ensure maximum immune response and minimize adverse events.</p>
+            </div>
+
+            <div class="grid-2">
+                <!-- Before Vaccination -->
+                <div class="card" style="background: var(--gray-50);">
+                    <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 1rem;">
+                        <span style="font-size: 1.8rem;">📋</span>
+                        <h3 style="color: var(--primary-dark);">Before Your Appointment</h3>
+                    </div>
+                    <ul style="list-style:none; line-height: 1.9; font-size: 0.95rem; color: var(--dark);">
+                        <li>✅ <strong>Do Not Fast:</strong> Eat a light, nourishing meal before visiting the clinic to prevent dizziness or hypoglycemia.</li>
+                        <li>✅ <strong>Hydrate Well:</strong> Drink plenty of water before and on the day of inoculation.</li>
+                        <li>✅ <strong>Avoid Pre-medication:</strong> Do not preemptively take paracetamol or painkillers unless instructed by your doctor.</li>
+                        <li>✅ <strong>Wear Comfortable Clothing:</strong> Opt for loose, short-sleeved tops for easy upper arm deltoid access.</li>
+                        <li>✅ <strong>Disclose Medical History:</strong> Inform staff of severe allergies, pregnancy, blood-thinners, or recent fever episodes.</li>
+                        <li>✅ <strong>Bring Valid Photo ID:</strong> Carry your booking slip/SMS confirmation and registered national photo ID.</li>
+                    </ul>
+                </div>
+
+                <!-- After Booking & After Inoculation -->
+                <div class="card" style="background: var(--gray-50);">
+                    <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 1rem;">
+                        <span style="font-size: 1.8rem;">🩹</span>
+                        <h3 style="color: var(--accent);">After-Booking & Post-Dose Care</h3>
+                    </div>
+                    <ul style="list-style:none; line-height: 1.9; font-size: 0.95rem; color: var(--dark);">
+                        <li>⏱️ <strong>Mandatory 30-Min Observation:</strong> Remain seated in the centre's waiting area for 30 minutes to detect any acute reactions.</li>
+                        <li>🧊 <strong>Arm Soreness:</strong> Apply a clean, cool, damp cloth to the injection site to ease local pain and swelling.</li>
+                        <li>💊 <strong>Managing Mild Fever:</strong> Mild low-grade fever, fatigue, or headache is normal. Paracetamol may be taken as prescribed.</li>
+                        <li>🚫 <strong>No Strenuous Work:</strong> Avoid vigorous physical exercise, heavy lifting, or alcohol consumption for 24 hours.</li>
+                        <li>📲 <strong>Automatic Next Dose:</strong> Your next scheduled dose is automatically calculated by the system and available in your portal.</li>
+                        <li>📥 <strong>Certificate:</strong> Download your digitally signed vaccination card from your profile dashboard.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. EMERGENCY CONTACT FOR AFTER-VACCINATION EFFECTS (AEFI) -->
+    <section id="emergency" class="container">
+        <div class="emergency-banner">
+            <div>
+                <h3>⚠️ Post-Vaccine AEFI Emergency & Adverse Effect Support</h3>
+                <p>If you or your dependent experience acute allergic symptoms, difficulty breathing, or persistent high fever (>102°F), contact our triage team immediately.</p>
+            </div>
+            <a href="tel:1075" class="btn btn-danger" style="white-space: nowrap; font-size: 1.1rem; padding: 0.8rem 1.6rem;">📞 Call 1075 (24/7)</a>
+        </div>
+
+        <div class="grid-3">
+            <div class="card">
+                <h4 style="color: var(--success); margin-bottom: 0.5rem;">🟢 Expected Mild Symptoms</h4>
+                <p style="font-size: 0.88rem; color: var(--gray-600); margin-bottom: 0.75rem;">Resolves autonomously within 48–72 hours:</p>
+                <ul style="font-size: 0.9rem; line-height: 1.8; padding-left: 1.2rem; color: var(--gray-600);">
+                    <li>Local pain, redness, or warmth at injection arm</li>
+                    <li>Low-grade temperature (&lt; 101°F)</li>
+                    <li>Mild muscle ache, chills, or headache</li>
+                    <li>Temporary tiredness or mild nausea</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h4 style="color: var(--danger); margin-bottom: 0.5rem;">🔴 Warning Signs (Emergency)</h4>
+                <p style="font-size: 0.88rem; color: var(--gray-600); margin-bottom: 0.75rem;">Requires instant clinical intervention:</p>
+                <ul style="font-size: 0.9rem; line-height: 1.8; padding-left: 1.2rem; color: var(--danger);">
+                    <li>Shortness of breath, wheezing, or throat tightness</li>
+                    <li>Facial swelling, lip edema, or extensive hives</li>
+                    <li>Persistent high fever (>102°F) lasting over 3 days</li>
+                    <li>Sudden dizziness, severe vertigo, or fainting</li>
+                </ul>
+            </div>
+
+            <!-- Instant AEFI Reporting Form -->
+            <div class="card">
+                <h4 style="margin-bottom: 0.5rem;">Report Adverse Symptoms</h4>
+                <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem;">Directly alerts the medical monitoring team.</p>
+                <form onsubmit="handleAEFIReport(event)">
+                    <div class="form-group">
+                        <input type="text" id="aefiName" class="form-control" placeholder="Patient Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" id="aefiPhone" class="form-control" placeholder="Callback Phone Number" pattern="[0-9]{10}" required>
+                    </div>
+                    <div class="form-group">
+                        <select id="aefiSeverity" class="form-control">
+                            <option value="Mild">Mild Reactions (Fever, Soreness)</option>
+                            <option value="Moderate">Moderate (Persistent Body Pain, Vomiting)</option>
+                            <option value="Severe">Severe (Allergic reaction, Breathing issues)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-sm" style="width: 100%;">Submit AEFI Report</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. LATEST VACCINE NEWS & HEALTH UPDATES -->
+    <section id="news" style="background: white; padding: 4rem 5%; border-top: 1px solid var(--gray-200);">
+        <div class="container" style="margin: 0 auto;">
+            <div class="section-header">
+                <h2>Vaccine Bulletins & Public Health Updates</h2>
+                <p>Authentic guidelines, research breakthroughs, and government immunization notifications.</p>
+            </div>
+
+            <div class="grid-3">
+                <div class="card news-card">
+                    <img src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80" alt="Vaccine news">
+                    <div class="news-date">17 September 2026 • Health Ministry Advisory</div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">National Booster Dose Eligibility Schedule Updated</h3>
+                    <p style="font-size: 0.9rem; color: var(--gray-600);">
+                        The expert advisory group recommends precautionary booster inoculations for individuals with chronic vulnerabilities 6 months following dose 2.
+                    </p>
+                </div>
+
+                <div class="card news-card">
+                    <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=600&q=80" alt="Pediatric vaccine">
+                    <div class="news-date">12 September 2026 • Pediatric Immunization</div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">School-Level Measles-Rubella Catch-up Campaign</h3>
+                    <p style="font-size: 0.9rem; color: var(--gray-600);">
+                        Universal drive launched across all district schools to ensure 100% completion of secondary MMR doses before the annual term exams.
+                    </p>
+                </div>
+
+                <div class="card news-card">
+                    <img src="https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?auto=format&fit=crop&w=600&q=80" alt="Clinical Safety">
+                    <div class="news-date">08 September 2026 • Safety Surveillance</div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Real-Time Digital Monitoring Lowers AEFI Response Times</h3>
+                    <p style="font-size: 0.9rem; color: var(--gray-600);">
+                        Automated clinical alert systems ensure under-15-minute triage intervention for patients reporting post-inoculation symptoms.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 11. AUTHENTICATION MODAL (LOGIN & REGISTRATION) -->
+    <div id="authModal" class="modal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeAuthModal()">×</button>
+            <div class="tab-btn-group">
+                <button id="tabLogin" class="tab-btn active" onclick="switchAuthTab('login')">Patient Sign In</button>
+                <button id="tabRegister" class="tab-btn" onclick="switchAuthTab('register')">Register Patient</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="formLogin" onsubmit="handleLoginSubmit(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUser" class="form-control" placeholder="e.g. arya_prakash" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPass" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Log In</button>
+                <p style="font-size: 0.8rem; color: var(--gray-600); margin-top: 1rem; text-align: center;">
+                    Test accounts: <code>arya_prakash</code> / <code>pass123</code> (Patient) or <code>admin</code> / <code>admin123</code> (Admin)
+                </p>
+            </form>
+
+            <!-- Registration Form -->
+            <form id="formRegister" style="display: none;" onsubmit="handleRegisterSubmit(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" class="form-control" placeholder="Arya Prakash" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" id="regDob" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Contact Phone</label>
+                    <input type="tel" id="regPhone" class="form-control" placeholder="10-digit mobile" pattern="[0-9]{10}" required>
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUser" class="form-control" placeholder="Choose a username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPass" class="form-control" placeholder="Create password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Complete Registration</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 12. FOOTER -->
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <a href="#" class="brand" style="color: white; margin-bottom: 1rem;">💉 Vaxi<span>Care</span></a>
+                <p>
+                    Proactive clinical immunization management, automated dosage calculation, and comprehensive patient monitoring platform.
+                </p>
+                <div style="margin-top: 1rem; color: #f87171; font-weight: 700;">
+                    Emergency Hotline: +91 495 2371475 / 1075
+                </div>
+            </div>
+            <div>
+                <h4>Vaccine Regimens</h4>
+                <p><a href="#vaccines">Covishield (Viral Vector)</a></p>
+                <p><a href="#vaccines">Covaxin (Inactivated)</a></p>
+                <p><a href="#vaccines">Corbevax (Subunit)</a></p>
+                <p><a href="#vaccines">Hepatitis B & MMR</a></p>
+            </div>
+            <div>
+                <h4>Quick Navigation</h4>
+                <p><a href="#centers">Vaccination Centres</a></p>
+                <p><a href="#city-map-section">City Map</a></p>
+                <p><a href="#instructions">Pre & Post Guidance</a></p>
+                <p><a href="#emergency">Emergency Care</a></p>
+            </div>
+            <div>
+                <h4>Operational Centres</h4>
+                <p>📍 District General Hospital, Kozhikode</p>
+                <p>📍 Govt. Medical College Hospital</p>
+                <p>📍 Cheruthuruthy Primary Health Centre</p>
+                <p>📍 Aster MIMS Vaccination Unit</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 VaxiCare Immunization System • Supporting KTU S3 OOP Java Project • SDG 3 (Good Health & Well-being)</p>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS for Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- App Logic & Handlers -->
+    <script>
+        // ============================================================================
+        // 0. BACKEND DETECTION & LOCAL STORAGE FALLBACK
+        // ============================================================================
+        let backendAvailable = false;
+
+        async function checkBackendHealth() {
+            try {
+                const res = await fetch('/api/status', { cache: 'no-store' });
+                if (res.ok) {
+                    const data = await res.json();
+                    backendAvailable = true;
+                    const badge = document.getElementById('backendStatusBadge');
+                    if (badge) {
+                        badge.style.background = '#065f46';
+                        badge.style.color = '#a7f3d0';
+                        badge.innerHTML = `🟢 Backend Online (${data.userCount} Users | ${data.appointmentCount} Bookings in DB)`;
+                    }
+                    return true;
+                }
+            } catch (e) {
+                backendAvailable = false;
+                const badge = document.getElementById('backendStatusBadge');
+                if (badge) {
+                    badge.style.background = '#78350f';
+                    badge.style.color = '#fde68a';
+                    badge.innerHTML = '🟡 Offline Mode (Local Storage)';
+                    badge.title = 'Run start-server.bat in project folder to connect real backend';
+                }
+            }
+
+            // Initialize fallback mock data in localStorage if needed
+            if (!localStorage.getItem('smart_users')) {
+                localStorage.setItem('smart_users', JSON.stringify([
+                    { username: 'arya_prakash', pass: 'pass123', fullName: 'Arya Prakash', role: 'PATIENT', phone: '9876543210' },
+                    { username: 'admin', pass: 'admin123', fullName: 'Dr. Radhakrishnan (Nodal Officer)', role: 'ADMIN', phone: '9876543200' }
+                ]));
+            }
+            return false;
+        }
+
+        // ============================================================================
+        // 1. WORKING LOGIN HANDLER (Backend Database + Fallback)
+        // ============================================================================
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+
+            if (backendAvailable) {
+                try {
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: u, password: p })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        sessionStorage.setItem('loggedInUser', JSON.stringify(data.user));
+                        closeAuthModal();
+                        alert(`✅ Welcome back, ${data.user.fullName}!\nRole: ${data.user.role}\nAuthenticated via Backend Database.`);
+                        location.reload();
+                        return;
+                    } else {
+                        alert("❌ " + (data.message || "Invalid username or password!"));
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Backend error, trying local fallback", err);
+                }
+            }
+
+            // Fallback: localStorage
+            const users = JSON.parse(localStorage.getItem('smart_users') || "[]");
+            const match = users.find(user => user.username.toLowerCase() === u.toLowerCase() && user.pass === p);
+            if (match) {
+                sessionStorage.setItem('loggedInUser', JSON.stringify(match));
+                closeAuthModal();
+                alert(`Welcome back, ${match.fullName}!\nRole: ${match.role}\nYou are now logged in.`);
+                location.reload();
+            } else {
+                alert("Invalid username or password! Try: arya_prakash / pass123 or admin / admin123");
+            }
+        }
+
+        // ============================================================================
+        // 2. WORKING REGISTRATION HANDLER (Backend Database + Fallback)
+        // ============================================================================
+        async function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const user = document.getElementById('regUser').value.trim();
+            const pass = document.getElementById('regPass').value.trim();
+
+            if (backendAvailable) {
+                try {
+                    const res = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: user, password: pass, fullName: name, phone: phone })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        alert(`✅ Registration successful for ${name}!\nAccount saved permanently in backend database (database/users.json). Please sign in.`);
+                        switchAuthTab('login');
+                        document.getElementById('loginUser').value = user;
+                        document.getElementById('loginPass').focus();
+                        checkBackendHealth();
+                        return;
+                    } else {
+                        alert("❌ " + (data.message || "Registration failed."));
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Backend error, trying local fallback", err);
+                }
+            }
+
+            // Fallback: localStorage
+            const users = JSON.parse(localStorage.getItem('smart_users') || "[]");
+            if (users.some(u => u.username.toLowerCase() === user.toLowerCase())) {
+                alert(`Username '${user}' is already taken! Please choose a different username.`);
+                return;
+            }
+
+            users.push({ username: user, pass: pass, fullName: name, role: 'PATIENT', phone: phone });
+            localStorage.setItem('smart_users', JSON.stringify(users));
+
+            alert(`Registration successful for ${name}! Please sign in.`);
+            switchAuthTab('login');
+            document.getElementById('loginUser').value = user;
+            document.getElementById('loginPass').focus();
+        }
+
+        // ============================================================================
+        // 3. WORKING BOOKING HANDLER (Backend Database + Fallback)
+        // ============================================================================
+        async function handleHeroBooking(e) {
+            e.preventDefault();
+            const name = document.getElementById('bName').value.trim();
+            const phone = document.getElementById('bContact').value.trim();
+            const vaccine = document.getElementById('bVaccine').value;
+            const centre = document.getElementById('bCentre').value;
+
+            const payload = {
+                patientName: name,
+                contact: phone,
+                vaccine: vaccine,
+                centre: centre
+            };
+
+            if (backendAvailable) {
+                try {
+                    const res = await fetch('/api/book', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        alert(`✅ Appointment Successfully Booked!\n\nBooking ID: ${data.booking.bookingId}\nPatient: ${name}\nVaccine: ${vaccine}\nCentre: ${centre}\nSaved to Backend Database (database/appointments.json).\n\n⚠️ IMPORTANT: Please arrive 15 minutes before your slot and do not fast.`);
+                        renderBookings();
+                        checkBackendHealth();
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Backend error, trying local fallback", err);
+                }
+            }
+
+            // Fallback: localStorage
+            const booking = {
+                bookingId: "BK-" + Math.floor(1000 + Math.random() * 9000),
+                patientName: name,
+                contact: phone,
+                vaccine: vaccine,
+                centre: centre,
+                date: new Date().toISOString().split('T')[0],
+                status: "CONFIRMED"
+            };
+
+            let bookings = JSON.parse(localStorage.getItem('smart_bookings') || "[]");
+            bookings.push(booking);
+            localStorage.setItem('smart_bookings', JSON.stringify(bookings));
+
+            alert(`✅ Appointment Successfully Booked!\n\nBooking ID: ${booking.bookingId}\nPatient: ${name}\nVaccine: ${vaccine}\nCentre: ${centre}\nDate: ${booking.date}\n\n⚠️ IMPORTANT: Please arrive 15 minutes before your slot and do not fast.`);
+            renderBookings();
+        }
+
+        // ============================================================================
+        // 4. WORKING LOGOUT HANDLER
+        // ============================================================================
+        function handleLogout() {
+            sessionStorage.removeItem('loggedInUser');
+            alert("You have been signed out successfully.");
+            location.reload();
+        }
+
+        // ============================================================================
+        // 5. MODAL UI HANDLERS (OPEN, CLOSE, TAB SWITCH)
+        // ============================================================================
+        function openAuthModal(tab) {
+            const modal = document.getElementById('authModal');
+            if (modal) modal.classList.add('active');
+            switchAuthTab(tab);
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function switchAuthTab(tab) {
+            const isLogin = tab === 'login';
+            document.getElementById('formLogin').style.display = isLogin ? 'block' : 'none';
+            document.getElementById('formRegister').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('tabLogin').classList.toggle('active', isLogin);
+            document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+        }
+
+        // Close modal when clicking outside the card
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('authModal');
+            if (e.target === modal) {
+                closeAuthModal();
+            }
+        });
+
+        // ============================================================================
+        // 6. AEFI EMERGENCY REPORT HANDLER (Backend Database + Fallback)
+        // ============================================================================
+        async function handleAEFIReport(e) {
+            e.preventDefault();
+            const name = document.getElementById('aefiName').value.trim();
+            const phone = document.getElementById('aefiPhone').value.trim();
+            const severity = document.getElementById('aefiSeverity').value;
+
+            const payload = { patientName: name, phone: phone, severity: severity };
+
+            if (backendAvailable) {
+                try {
+                    const res = await fetch('/api/aefi', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        alert(`🚨 AEFI Report Logged for ${name} (${severity} level).\n\nReport ID: ${data.report.reportId}\nSaved to Backend Surveillance Database (database/aefi_reports.json). Our duty medical officer will call ${phone} within 10 minutes.`);
+                        e.target.reset();
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Backend error, trying local fallback", err);
+                }
+            }
+
+            // Fallback: localStorage
+            const report = {
+                reportId: "AEFI-" + Math.floor(1000 + Math.random() * 9000),
+                patientName: name,
+                phone: phone,
+                severity: severity,
+                timestamp: new Date().toLocaleString()
+            };
+
+            let reports = JSON.parse(localStorage.getItem('smart_aefi') || "[]");
+            reports.push(report);
+            localStorage.setItem('smart_aefi', JSON.stringify(reports));
+
+            alert(`🚨 AEFI Report Logged for ${name} (${severity} level).\n\nReport ID: ${report.reportId}\nThe Clinical Monitoring Desk has been alerted. Our duty medical officer will call ${phone} within 10 minutes.`);
+            e.target.reset();
+        }
+
+        // ============================================================================
+        // 7. PRE-SELECT CENTRE HELPER
+        // ============================================================================
+        function selectCentre(name) {
+            const centreSelect = document.getElementById('bCentre');
+            if (centreSelect) {
+                for (let i = 0; i < centreSelect.options.length; i++) {
+                    if (centreSelect.options[i].value === name || centreSelect.options[i].text.includes(name)) {
+                        centreSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============================================================================
+        // 8. RENDER ACTIVE BOOKINGS (Backend Database + Fallback)
+        // ============================================================================
+        async function renderBookings() {
+            let bookings = [];
+            if (backendAvailable) {
+                try {
+                    const res = await fetch('/api/appointments', { cache: 'no-store' });
+                    if (res.ok) {
+                        bookings = await res.json();
+                    }
+                } catch (err) {
+                    console.warn("Could not fetch backend bookings, using local storage", err);
+                }
+            }
+
+            if (!bookings || bookings.length === 0) {
+                bookings = JSON.parse(localStorage.getItem('smart_bookings') || "[]");
+            }
+
+            const container = document.getElementById('bookingsListContainer');
+            const section = document.getElementById('my-bookings-section');
+            const navLink = document.getElementById('navBookingsLink');
+
+            if (!container || !section) return;
+
+            if (!bookings || bookings.length === 0) {
+                section.style.display = 'none';
+                if (navLink) navLink.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            if (navLink) navLink.style.display = 'inline-block';
+
+            container.innerHTML = bookings.slice().reverse().map(b => `
+                <div class="card" style="border-left: 5px solid var(--success);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                        <strong style="color:var(--primary); font-size:1.1rem;">${b.bookingId}</strong>
+                        <span class="badge badge-success">${b.status || 'CONFIRMED'}</span>
+                    </div>
+                    <p style="margin: 0.2rem 0;"><strong>Patient:</strong> ${b.patientName} (${b.contact})</p>
+                    <p style="margin: 0.2rem 0;"><strong>Vaccine:</strong> ${b.vaccine}</p>
+                    <p style="margin: 0.2rem 0;"><strong>Centre:</strong> ${b.centre}</p>
+                    <p style="margin: 0.2rem 0; font-size:0.85rem; color:var(--gray-600);"><strong>Scheduled Date:</strong> ${b.date}</p>
+                </div>
+            `).join('');
+        }
+
+        // ============================================================================
+        // 9. CHECK AUTH STATE ON PAGE LOAD
+        // ============================================================================
+        function checkAuthState() {
+            const loggedInUserStr = sessionStorage.getItem('loggedInUser');
+            const authNav = document.getElementById('authNavButtons');
+            const profileNav = document.getElementById('userProfileNav');
+            const greeting = document.getElementById('userGreeting');
+            const roleBadge = document.getElementById('userRoleBadge');
+
+            if (loggedInUserStr) {
+                try {
+                    const user = JSON.parse(loggedInUserStr);
+                    if (authNav) authNav.style.display = 'none';
+                    if (profileNav) profileNav.style.display = 'flex';
+                    if (greeting) greeting.textContent = `👤 ${user.fullName}`;
+                    if (roleBadge) {
+                        roleBadge.textContent = user.role;
+                        roleBadge.className = user.role === 'ADMIN' ? 'badge badge-danger' : 'badge badge-info';
+                    }
+
+                    // Pre-fill booking form with logged in user details if empty
+                    const bName = document.getElementById('bName');
+                    const bContact = document.getElementById('bContact');
+                    if (bName && !bName.value) bName.value = user.fullName || '';
+                    if (bContact && !bContact.value) bContact.value = user.phone || '';
+                } catch (e) {
+                    console.error("Session parse error", e);
+                }
+            } else {
+                if (authNav) authNav.style.display = 'flex';
+                if (profileNav) profileNav.style.display = 'none';
+            }
+        }
+
+        // ============================================================================
+        // 10. INITIALIZE CITY MAP & APP STATE
+        // ============================================================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkBackendHealth();
+            checkAuthState();
+            renderBookings();
+
+            // Initialize Leaflet City Map (Centered on Kozhikode Hub)
+            const mapContainer = document.getElementById('cityMap');
+            if (mapContainer && typeof L !== 'undefined') {
+                const map = L.map('cityMap').setView([11.2588, 75.7804], 12);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+
+                const centres = [
+                    { name: "District General Hospital", lat: 11.2530, lng: 75.7780, type: "centre", vaccines: "Covishield, Covaxin" },
+                    { name: "Govt. Medical College Immunization Hub", lat: 11.2723, lng: 75.8360, type: "emergency", vaccines: "All Vaccines + 24/7 AEFI ICU" },
+                    { name: "Aster MIMS Vaccination Clinic", lat: 11.2460, lng: 75.8010, type: "centre", vaccines: "Pediatric & Travel Shots" },
+                    { name: "Cheruthuruthy Primary Health Centre", lat: 10.7485, lng: 76.2810, type: "centre", vaccines: "Covaxin, Hep-B" }
+                ];
+
+                centres.forEach(c => {
+                    const isEmergency = c.type === 'emergency';
+                    const marker = L.circleMarker([c.lat, c.lng], {
+                        color: isEmergency ? '#dc2626' : '#0284c7',
+                        fillColor: isEmergency ? '#ef4444' : '#0284c7',
+                        fillOpacity: 0.85,
+                        radius: 9
+                    }).addTo(map);
+
+                    marker.bindPopup(`
+                        <div style="font-size:0.9rem; line-height: 1.5;">
+                            <strong>${c.name}</strong><br>
+                            <span style="color:${isEmergency ? '#dc2626' : '#0284c7'}; font-weight:700;">
+                                ${isEmergency ? '🚨 24/7 Emergency & Vaccine Unit' : '💉 Designated Vaccination Centre'}
+                            </span><br>
+                            <small>Stock: ${c.vaccines}</small><br>
+                            <button onclick="selectCentre('${c.name}')" style="margin-top:5px; padding:2px 8px; background:#0284c7; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem;">Select This Centre</button>
+                        </div>
+                    `);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

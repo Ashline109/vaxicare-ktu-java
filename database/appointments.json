@@ -1,0 +1,31 @@
+﻿[
+    {
+        "bookingId":  "BK-1001",
+        "patientName":  "Arya Prakash",
+        "contact":  "9876543210",
+        "vaccine":  "Covishield",
+        "centre":  "District General Hospital",
+        "date":  "2026-09-20",
+        "status":  "CONFIRMED"
+    },
+    {
+        "bookingId":  "BK-1236",
+        "patientName":  "Sneha Patel",
+        "contact":  "9847555666",
+        "vaccine":  "Covaxin",
+        "centre":  "Govt. Medical College Immunization Hub",
+        "date":  "2026-09-17",
+        "status":  "CONFIRMED",
+        "created_at":  "2026-09-17 22:51:13"
+    },
+    {
+        "bookingId":  "BK-6208",
+        "patientName":  "rohit menon",
+        "contact":  "9874561230",
+        "vaccine":  "Covishield",
+        "centre":  "District General Hospital",
+        "date":  "2026-09-17",
+        "status":  "CONFIRMED",
+        "created_at":  "2026-09-17 23:02:53"
+    }
+]

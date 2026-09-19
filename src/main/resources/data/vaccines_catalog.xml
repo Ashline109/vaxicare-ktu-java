@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  VaxiCare XML Vaccine Registry
+  Demonstrating XML technology & Java DOM/SAX parsing for KTU S3 OOP Java syllabus
+-->
+<vaccineRegistry version="2.0" lastUpdated="2026-09-15">
+    <vaccine id="VAC-001" type="ViralVector">
+        <name>Covishield</name>
+        <manufacturer>Serum Institute of India (AstraZeneca)</manufacturer>
+        <platform>Recombinant Chimpanzee Adenovirus (ChAdOx1)</platform>
+        <dosesRequired>2</dosesRequired>
+        <minIntervalDays>84</minIntervalDays>
+        <maxIntervalDays>112</maxIntervalDays>
+        <approvedAgeMin>18</approvedAgeMin>
+        <efficacyRate>81.3</efficacyRate>
+        <storageTemperature>2°C to 8°C</storageTemperature>
+        <coldChainRequirement>Standard Cold-Box Refrigerator</coldChainRequirement>
+        <targetAntigen>Spike Glycoprotein (S-Protein)</targetAntigen>
+    </vaccine>
+
+    <vaccine id="VAC-002" type="Inactivated">
+        <name>Covaxin</name>
+        <manufacturer>Bharat Biotech / ICMR</manufacturer>
+        <platform>Whole-Virion Inactivated Vero Cell (BBV152)</platform>
+        <dosesRequired>2</dosesRequired>
+        <minIntervalDays>28</minIntervalDays>
+        <maxIntervalDays>42</maxIntervalDays>
+        <approvedAgeMin>12</approvedAgeMin>
+        <efficacyRate>77.8</efficacyRate>
+        <storageTemperature>2°C to 8°C</storageTemperature>
+        <coldChainRequirement>Alhydrogel Adjuvant Cool Storage</coldChainRequirement>
+        <targetAntigen>Complete Inactivated Viral Epitopes</targetAntigen>
+    </vaccine>
+
+    <vaccine id="VAC-003" type="ProteinSubunit">
+        <name>Corbevax</name>
+        <manufacturer>Biological E. Limited</manufacturer>
+        <platform>Recombinant Protein Sub-unit (RBD)</platform>
+        <dosesRequired>2</dosesRequired>
+        <minIntervalDays>28</minIntervalDays>
+        <maxIntervalDays>56</maxIntervalDays>
+        <approvedAgeMin>5</approvedAgeMin>
+        <efficacyRate>80.0</efficacyRate>
+        <storageTemperature>2°C to 8°C</storageTemperature>
+        <coldChainRequirement>Standard Cold Chain Unit</coldChainRequirement>
+        <targetAntigen>Receptor Binding Domain</targetAntigen>
+    </vaccine>
+
+    <vaccine id="VAC-004" type="Recombinant">
+        <name>Hepatitis B</name>
+        <manufacturer>GlaxoSmithKline / Panacea</manufacturer>
+        <platform>Recombinant DNA Hepatitis B Surface Antigen (HBsAg)</platform>
+        <dosesRequired>3</dosesRequired>
+        <minIntervalDays>30</minIntervalDays>
+        <maxIntervalDays>180</maxIntervalDays>
+        <approvedAgeMin>0</approvedAgeMin>
+        <efficacyRate>95.0</efficacyRate>
+        <storageTemperature>2°C to 8°C</storageTemperature>
+        <coldChainRequirement>Never Freeze; Keep at 2-8°C</coldChainRequirement>
+        <targetAntigen>HBsAg Antigens</targetAntigen>
+    </vaccine>
+
+    <vaccine id="VAC-005" type="LiveAttenuated">
+        <name>MMR</name>
+        <manufacturer>Serum Institute / Merck</manufacturer>
+        <platform>Trivalent Live Attenuated Viral Strains</platform>
+        <dosesRequired>2</dosesRequired>
+        <minIntervalDays>90</minIntervalDays>
+        <maxIntervalDays>180</maxIntervalDays>
+        <approvedAgeMin>1</approvedAgeMin>
+        <efficacyRate>97.0</efficacyRate>
+        <storageTemperature>2°C to 8°C</storageTemperature>
+        <coldChainRequirement>Protect from light; Standard Cold Chain</coldChainRequirement>
+        <targetAntigen>Measles, Mumps, Rubella Antigens</targetAntigen>
+    </vaccine>
+
+    <vaccine id="VAC-006" type="InactivatedSplit">
+        <name>Influenza Flu Shot</name>
+        <manufacturer>Abbott / Sanofi Pasteur</manufacturer>
+        <platform>Quadrivalent Inactivated Split Virion</platform>
+        <dosesRequired>1</dosesRequired>
+        <minIntervalDays>365</minIntervalDays>
+        <maxIntervalDays>365</maxIntervalDays>
+        <approvedAgeMin>1</approvedAgeMin>
+        <efficacyRate>60.0</efficacyRate>
+        <storageTemperature>2°C to 8°C</storageTemperature>
+        <coldChainRequirement>Standard 2-8°C Refrigeration</coldChainRequirement>
+        <targetAntigen>Hemagglutinin &amp; Neuraminidase</targetAntigen>
+    </vaccine>
+</vaccineRegistry>
