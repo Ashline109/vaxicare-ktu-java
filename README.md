@@ -109,7 +109,7 @@ Each team member can develop their assigned module in a separate branch before i
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/arya200631-del/vaxicare-ktu-java.git
+https://github.com/Group-5-oop-project/vaxicare-ktu-java
 ```
 
 ### 2. Open the Project
@@ -135,7 +135,8 @@ Compile and run the main Java application class from your IDE.
 ## 🔗 Project Repository
 
 **GitHub:**
-https://github.com/arya200631-del/vaxicare-ktu-java
+[https://github.com/Group-5-oop-project/vaxicare-ktu-java]
+
 
 ## 👥 Team
 
