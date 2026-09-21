@@ -3,9 +3,6 @@
 
 A comprehensive, full-stack clinical immunization management platform designed to automate multi-dose vaccine scheduling, monitor cold-chain inventory, triage adverse side-effects (AEFI), and provide an interactive real-time patient portal.
 
-🌐 **Live Web Demo**: [https://arya200631-del.github.io/vaxicare-ktu-java/](https://arya200631-del.github.io/vaxicare-ktu-java/)  
-📂 **GitHub Repository**: [https://github.com/arya200631-del/vaxicare-ktu-java](https://github.com/arya200631-del/vaxicare-ktu-java)
-
 ---
 
 ## 👥 Project Team (Group of 4)
